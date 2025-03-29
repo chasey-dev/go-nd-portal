@@ -47,7 +47,7 @@ func NewPortal(name, password string, ipv4 net.IP) (*Portal, error) {
 func (p *Portal) GetChallenge(u string) (string, error) {
 	u = fmt.Sprintf(u, "gondportal", url.QueryEscape(p.nam), p.ip, time.Now().UnixMilli())
 	logrus.Debugln("GET", u)
-	data, err := requestDataWith(u, "GET", PortalHeaderUA)
+	data, err := requestDataWith(p.ip, u, "GET", PortalHeaderUA)
 	if err != nil {
 		return "", err
 	}
@@ -79,7 +79,7 @@ func (p *Portal) Login(u, domain, challenge string) error {
 	hmd5 := p.PasswordHMd5(challenge)
 	u = fmt.Sprintf(u, "gondportal", url.QueryEscape(p.nam), hmd5, p.ip, p.CheckSum(domain, challenge, hmd5, info), url.QueryEscape(info), time.Now().UnixMilli())
 	logrus.Debugln("GET", u)
-	data, err := requestDataWith(u, "GET", PortalHeaderUA)
+	data, err := requestDataWith(p.ip, u, "GET", PortalHeaderUA)
 	if err != nil {
 		return err
 	}
