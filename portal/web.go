@@ -50,7 +50,8 @@ func findInterfaceByIP(ip net.IP) (*net.Interface, error) {
 func dialerWithInterface(iface string) *net.Dialer {
 	return &net.Dialer{
 		Timeout: 30 * time.Second,
-		Control: func(network, address string, c syscall.RawConn) error {
+		KeepAlive: 30 * time.Second,
+		Control: func(_, _ string, c syscall.RawConn) error {
 			var controlErr error
 			// 在 socket 建立后，通过 Control 回调设置 SO_BINDTODEVICE 选项绑定到指定接口
 			err := c.Control(func(fd uintptr) {
