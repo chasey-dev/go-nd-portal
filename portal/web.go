@@ -4,17 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"time"
 	"net"
 	"net/http"
 	"syscall"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
 
 // findInterfaceByIP 根据给定的 IP 查询所属的网络接口
 func findInterfaceByIP(ip net.IP) (*net.Interface, error) {
-	logrus.Debugln("request ip: ",ip)
+	logrus.Debugln("request ip: ", ip)
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		s := fmt.Sprintf("get interface list failed: %v", err)
@@ -37,7 +37,7 @@ func findInterfaceByIP(ip net.IP) (*net.Interface, error) {
 				addrIP = v.IP
 			}
 			if ipNet != nil && addrIP.Equal(ip) {
-				logrus.Debugln("ip bound to iface",iface)
+				logrus.Debugln("ip bound to iface", iface)
 				return &iface, nil
 			}
 		}
@@ -49,7 +49,7 @@ func findInterfaceByIP(ip net.IP) (*net.Interface, error) {
 // dialerWithInterface 返回一个自定义的 net.Dialer，该 dialer 在建立连接时将 socket 绑定到指定的网络接口（仅限 Linux）
 func dialerWithInterface(iface string) *net.Dialer {
 	return &net.Dialer{
-		Timeout: 30 * time.Second,
+		Timeout:   30 * time.Second,
 		KeepAlive: 30 * time.Second,
 		Control: func(_, _ string, c syscall.RawConn) error {
 			var controlErr error
@@ -67,8 +67,8 @@ func dialerWithInterface(iface string) *net.Dialer {
 
 // requestDataWith 使用自定义请求头获取数据
 func requestDataWith(ip net.IP, url, method, ua string) (data []byte, err error) {
-	iface, err :=findInterfaceByIP(ip)
-	if(err != nil){
+	iface, err := findInterfaceByIP(ip)
+	if err != nil {
 		return nil, err
 	}
 
@@ -76,7 +76,7 @@ func requestDataWith(ip net.IP, url, method, ua string) (data []byte, err error)
 
 	client := &http.Client{
 		Transport: &http.Transport{
-			DialContext: dialer.DialContext,
+			DialContext:         dialer.DialContext,
 			TLSHandshakeTimeout: 10 * time.Second,
 		},
 	}
