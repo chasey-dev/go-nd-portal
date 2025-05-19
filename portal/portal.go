@@ -118,7 +118,7 @@ func (p *Portal) GetChallenge(sIP string) (string, error) {
 		return "", err
 	}
 	logrus.Debugln("GET", u)
-	data, err := requestDataWith(u, "GET", PortalHeaderUA)
+	data, err := requestDataWith(p.ip, u, "GET", PortalHeaderUA)
 	if err != nil {
 		return "", err
 	}
@@ -175,7 +175,7 @@ func (p *Portal) Login(sIP, challenge string) error {
 		return err
 	}
 	logrus.Debugln("GET", u)
-	data, err := requestDataWith(u, "GET", PortalHeaderUA)
+	data, err := requestDataWith(p.ip, u, "GET", PortalHeaderUA)
 	if err != nil {
 		return err
 	}
