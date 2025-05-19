@@ -200,7 +200,7 @@ func (p *Portal) GetChallenge() (string, error) {
 		return "", err
 	}
 	logrus.Debugln("GET", u)
-	data, err := requestDataWith(u, "GET", PortalHeaderUA)
+	data, err := requestDataWith(p.cip, u, "GET", PortalHeaderUA)
 	if err != nil {
 		return "", err
 	}
@@ -259,7 +259,7 @@ func (p *Portal) Login(challenge string) error {
 		return err
 	}
 	logrus.Debugln("GET", u)
-	data, err := requestDataWith(u, "GET", PortalHeaderUA)
+	data, err := requestDataWith(p.cip, u, "GET", PortalHeaderUA)
 	if err != nil {
 		return err
 	}
