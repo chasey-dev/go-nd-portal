@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/hex"
+	"net"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,7 +13,7 @@ import (
 )
 
 func TestGetUserInfo(t *testing.T) {
-	u, err := NewPortal("2000010101001", "12345678", "", "1.2.3.4", LoginTypeQshEdu)
+	u, err := NewPortal("2000010101001", "12345678", "", net.IPv4(1, 2, 3, 4).To4(), LoginTypeQshEdu)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +53,7 @@ func TestDecodeKey(t *testing.T) {
 }
 
 func TestEncodeUserInfo(t *testing.T) {
-	u, err := NewPortal("2001010101001", "1234567890", "", "113.54.148.243", LoginTypeQshEdu)
+	u, err := NewPortal("2001010101001", "1234567890", "", net.IPv4(113, 54, 148, 243).To4(), LoginTypeQshEdu)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +67,7 @@ func TestEncodeUserInfo(t *testing.T) {
 }
 
 func TestHMd5(t *testing.T) {
-	u, err := NewPortal("2001010101001", "1234567890", "", "113.54.148.243", LoginTypeQshEdu)
+	u, err := NewPortal("2001010101001", "1234567890", "", net.IPv4(113, 54, 148, 243).To4(), LoginTypeQshEdu)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +81,7 @@ func TestSha1(t *testing.T) {
 }
 
 func TestCheckSum(t *testing.T) {
-	u, err := NewPortal("2001010101001", "1234567890", "", "113.54.148.243", LoginTypeQshEdu)
+	u, err := NewPortal("2001010101001", "1234567890", "", net.IPv4(113, 54, 148, 243).To4(), LoginTypeQshEdu)
 	if err != nil {
 		t.Fatal(err)
 	}
