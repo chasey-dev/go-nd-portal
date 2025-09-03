@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net"
-	"net/netip"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -17,12 +16,12 @@ import (
 )
 
 var (
+	// ErrIllegalIPv4 is returned when an invalid IPv4 address is provided
+	ErrIllegalIPv4 = errors.New("illegal ipv4")
 	// ErrIllegalLoginType is returned when an invalid login type is provided
 	ErrIllegalLoginType = errors.New("illegal login type")
 	// ErrUnexpectedChallengeResponse is returned when challenge is shorter than expected
 	ErrUnexpectedChallengeResponse = errors.New("unexpected challenge response")
-	// ErrCannotDetermineClientIP is returned when client IP cant get from challenge or local resolution with cip not specified
-	ErrCannotDetermineClientIP = errors.New("failed to determine client IP from challenge response or local resolution")
 	// ErrUnexpectedLoginResponse is returned when login resp is shorter than expected
 	ErrUnexpectedLoginResponse = errors.New("unexpected login response")
 )
@@ -31,7 +30,7 @@ var (
 type Portal struct {
 	name   string
 	pswd   string
-	cip    string
+	cip    net.IP
 	sip    string
 	domain string
 	acid   string
@@ -113,17 +112,6 @@ func (lt LoginType) ToDomainAcID() (string, string, error) {
 	return domain, acid, nil
 }
 
-// ResolveLocalClientIP resolves Client IP locally
-func ResolveLocalClientIP() (string, error) {
-	conn, err := net.Dial("udp", "8.8.8.8:53")
-	if err != nil {
-		return "", err
-	}
-	defer conn.Close()
-
-	return conn.LocalAddr().(*net.UDPAddr).IP.String(), nil
-}
-
 // commonRsp struct for login session specific response
 type commonRsp struct {
 	// return code and various messages
@@ -167,7 +155,11 @@ func (cr *commonRsp) err() error {
 }
 
 // NewPortal creates a new Portal instance
-func NewPortal(name, password, sIP string, cIP string, loginType LoginType) (*Portal, error) {
+func NewPortal(name, password, sIP string, cIP net.IP, loginType LoginType) (*Portal, error) {
+	if len(cIP) != 4 {
+		return nil, ErrIllegalIPv4
+	}
+
 	domain, acid, err := loginType.ToDomainAcID()
 	if err != nil {
 		return nil, err
@@ -227,23 +219,6 @@ func (p *Portal) GetChallenge() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	// if cip was left empty, try get from challenge resp
-	if p.cip == "" {
-		logrus.Debugln("client ip is not specified, try get client ip from challenge resp")
-		_, err = netip.ParseAddr(r.ClientIP)
-		if err == nil {
-			p.cip = r.ClientIP
-			logrus.Debugln("get client ip from challenge resp:", r.ClientIP)
-		} else {
-			// if ClientIP is invalid, try resolve it locally
-			p.cip, err = ResolveLocalClientIP()
-			if err != nil {
-				return "", ErrCannotDetermineClientIP
-			}
-			logrus.Debugln("failed to get client ip from challenge resp, using locally resolved ip:", p.cip)
-		}
-	}
 	logrus.Debugln("get challenge:", r.Challenge)
 	return r.Challenge, nil
 }
@@ -298,12 +273,5 @@ func (p *Portal) Login(challenge string) error {
 	if err != nil {
 		return err
 	}
-
-	// compare local cip with response client_ip
-	if p.cip != r.ClientIP {
-		logrus.Warnln("client ip in login request does not match response! unexpected errors may occur")
-		logrus.Warnf("request: %s, response: %s", p.cip, r.ClientIP)
-	}
-
 	return r.err()
 }
