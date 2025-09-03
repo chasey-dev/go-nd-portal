@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"net"
 	"strings"
 
 	"github.com/google/go-querystring/query"
@@ -20,6 +19,8 @@ const (
 	PortalServerIPQsh = "10.253.0.237"
 	// PortalServerIPQshDorm default Server IP String in Qsh new dorm area
 	PortalServerIPQshDorm = "10.253.0.235"
+	// PortalServerIPSh default Server IP String in Sh
+	PortalServerIPSh = "192.168.9.8"
 
 	// PortalDomainQsh PortalDomain for qsh-edu login type
 	PortalDomainQsh = "@dx-uestc"
@@ -27,6 +28,12 @@ const (
 	PortalDomainQshDX = "@dx"
 	// PortalDomainQshCMCC PortalDomain for qshd-cmcc login type
 	PortalDomainQshCMCC = "@cmcc"
+	// PortalDomainSh PortalDomain for sh-edu login type
+	PortalDomainSh = "@uestc"
+	// PortalDomainShDX PortalDomain for sh-dx login type
+	PortalDomainShDX = "@dx"
+	// PortalDomainShCMCC PortalDomain for sh-cmcc login type
+	PortalDomainShCMCC = "@cmccgx"
 
 	// PortalGetChallenge GetChallenge URL
 	PortalGetChallenge = "http://%v/cgi-bin/get_challenge?%s"
@@ -41,6 +48,8 @@ const (
 	AcIDQsh = "1"
 	// AcIDQshDorm ACID for Qsh new dorm area
 	AcIDQshDorm = "3"
+	// AcIDSh ACID for Sh
+	AcIDSh = "6"
 
 	// PortalCGI Auth CGI URL
 	PortalCGI = "http://%v/cgi-bin/srun_portal?%s"
@@ -87,13 +96,13 @@ type GetPortalReq struct {
 func GetChallengeURL(
 	sIP,
 	callback,
-	username, domain string,
-	cIP net.IP,
+	username, domain,
+	cIP string,
 	timestamp int64) (string, error) {
 	v, err := query.Values(&GetChallengeReq{
 		Callback:  callback,
 		Username:  username + domain,
-		IP:        cIP.String(),
+		IP:        cIP,
 		Timestamp: timestamp,
 	})
 	if err != nil {
@@ -109,8 +118,8 @@ func GetLoginURL(
 	callback,
 	username, domain,
 	md5Password,
-	acid string,
-	cIP net.IP,
+	acid,
+	cIP,
 	chksum,
 	info string,
 	timestamp int64) (string, error) {
@@ -120,7 +129,7 @@ func GetLoginURL(
 		Username:          username + domain,
 		EncryptedPassword: "{MD5}" + md5Password,
 		AcID:              acid,
-		IP:                cIP.String(),
+		IP:                cIP,
 		Checksum:          chksum,
 		EncodedUserInfo:   "{SRBX1}" + info,
 		ConstantN:         "200",
@@ -155,14 +164,14 @@ type UserInfo struct {
 func GetUserInfo(
 	username,
 	domain,
-	password string,
-	cIP net.IP,
+	password,
+	cIP,
 	acid string) (string, error) {
 	var b strings.Builder
 	err := json.NewEncoder(&b).Encode(&UserInfo{
 		Username: username + domain,
 		Password: password,
-		IP:       cIP.String(),
+		IP:       cIP,
 		AcID:     acid,
 		EncVer:   "srun_bx1",
 	})
@@ -234,8 +243,8 @@ func (p *Portal) CheckSum(
 	username,
 	domain,
 	hmd5,
-	acid string,
-	cIP net.IP,
+	acid,
+	cIP,
 	info string) string {
 	var buf [20]byte
 	h := sha1.New()
@@ -247,7 +256,7 @@ func (p *Portal) CheckSum(
 	_, _ = h.Write(helper.StringToBytes(challenge))
 	_, _ = h.Write([]byte(acid)) // acid
 	_, _ = h.Write(helper.StringToBytes(challenge))
-	_, _ = h.Write(helper.StringToBytes(cIP.String()))
+	_, _ = h.Write(helper.StringToBytes(cIP))
 	_, _ = h.Write(helper.StringToBytes(challenge))
 	_, _ = h.Write([]byte("200")) // n
 	_, _ = h.Write(helper.StringToBytes(challenge))
