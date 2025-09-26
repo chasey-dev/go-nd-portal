@@ -160,7 +160,7 @@ func GetLoginURL(
 	return fmt.Sprintf(PortalCGI, sIP, v.Encode()), nil
 }
 
-// GetRadUserInfoReq generates the URL for rad_user_info req
+// GetRadUserInfoURL generates the URL for rad_user_info req
 func GetRadUserInfoURL(
 	sIP,
 	callback string,

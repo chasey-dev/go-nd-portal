@@ -270,6 +270,7 @@ func (p *Portal) Login(challenge string) error {
 	return nil
 }
 
+// GetRadUserInfo gets radius user info from server
 func GetRadUserInfo(sIP string, loginType LoginType) (error) {
 	var err error
 	if sIP == "" {
