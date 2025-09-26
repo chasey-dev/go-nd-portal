@@ -47,6 +47,15 @@ func Main() {
 	} else if *w {
 		logrus.SetLevel(logrus.WarnLevel)
 	}
+	if *s != "" {
+		// just validate IP here,
+		// dont convert to net.IP because we need only its string later
+		_, err := netip.ParseAddr(*s)
+		if err != nil {
+			logrus.Errorln(err)
+			os.Exit(line())
+		}
+	}
 	if *ip != "" {
 		// just validate IP here,
 		// dont convert to net.IP because we need only its string later
@@ -73,15 +82,6 @@ func Main() {
 		}
 		*p = helper.BytesToString(data)
 		fmt.Println()
-	}
-	if *s != "" {
-		// just validate IP here,
-		// dont convert to net.IP because we need only its string later
-		_, err := netip.ParseAddr(*s)
-		if err != nil {
-			logrus.Errorln(err)
-			os.Exit(line())
-		}
 	}
 	// n : username
 	// p: password
