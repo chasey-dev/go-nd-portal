@@ -36,6 +36,7 @@ func Main() {
 	d := flag.Bool("d", false, "display debug-level log")
 	s := flag.String("s", "", "login host, auto select when empty")
 	t := flag.String("t", "qsh-edu", "login type, \n {qsh-edu | qsh-dx | qshd-dx | qshd-cmcc | sh-edu | sh-dx | sh-cmcc}")
+	i := flag.Bool("i", false, "display current radius user info without login")
 	flag.Parse()
 	if *h {
 		fmt.Println("Usage:")
@@ -64,6 +65,14 @@ func Main() {
 			logrus.Errorln(err)
 			os.Exit(line())
 		}
+	}
+	if *i {
+		err := portal.GetRadUserInfo(*s, portal.LoginType(*t))
+		if err != nil {
+			logrus.Errorln(err)
+			os.Exit(line())
+		}
+		os.Exit(line())
 	}
 	if *n == query {
 		fmt.Printf("username: ")
