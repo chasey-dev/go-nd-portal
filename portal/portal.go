@@ -269,3 +269,35 @@ func (p *Portal) Login(challenge string) error {
 	}
 	return nil
 }
+
+func GetRadUserInfo(sIP string, loginType LoginType) (error) {
+	var err error
+	if sIP == "" {
+		sIP, err = loginType.GetDefaultPortalServerIP()
+		if err != nil {
+			return err
+		}
+	}
+	logrus.Debugf("server addr: %s, login type: %s", sIP, loginType)
+
+	u, err := GetRadUserInfoURL(
+		sIP,
+		"gondportal",
+		time.Now().UnixMilli(),
+	)
+	if err != nil {
+		return err
+	}
+	logrus.Debugln("GET", u)
+	data, err := requestDataWith(u, "GET", PortalHeaderUA)
+	if err != nil {
+		return err
+	}
+	logrus.Debugln("get rad_user_info resp:", helper.BytesToString(data))
+	if len(data) < 12 {
+		return ErrUnexpectedLoginResponse
+	}
+	logrus.Info(helper.BytesToString(data[11:len(data)-1]))
+
+	return nil
+}
