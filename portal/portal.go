@@ -271,7 +271,7 @@ func (p *Portal) Login(challenge string) error {
 }
 
 // GetRadUserInfo gets radius user info from server
-func GetRadUserInfo(sIP string, loginType LoginType) (error) {
+func GetRadUserInfo(sIP string, loginType LoginType) error {
 	var err error
 	if sIP == "" {
 		sIP, err = loginType.GetDefaultPortalServerIP()
@@ -298,7 +298,7 @@ func GetRadUserInfo(sIP string, loginType LoginType) (error) {
 	if len(data) < 12 {
 		return ErrUnexpectedLoginResponse
 	}
-	logrus.Info(helper.BytesToString(data[11:len(data)-1]))
+	logrus.Info(helper.BytesToString(data[11 : len(data)-1]))
 
 	return nil
 }

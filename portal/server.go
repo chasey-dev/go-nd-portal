@@ -64,8 +64,8 @@ const (
 	// 9.info
 	// 10.timestamp
 	// PortalLogin			= "http://%v/cgi-bin/srun_portal?callback=%s&action=login&username=%s%s&password={MD5}%s&ac_id=%s&ip=%v&chksum=%s&info={SRBX1}%s&n=200&type=1&os=Windows+10&name=Windows&double_stack=0&_=%d"
-	
-	// PortalRadUserInfo Radius User Info URL 
+
+	// PortalRadUserInfo Radius User Info URL
 	PortalRadUserInfo = "http://%v/cgi-bin/rad_user_info?%s"
 )
 
