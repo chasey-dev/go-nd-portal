@@ -64,6 +64,9 @@ const (
 	// 9.info
 	// 10.timestamp
 	// PortalLogin			= "http://%v/cgi-bin/srun_portal?callback=%s&action=login&username=%s%s&password={MD5}%s&ac_id=%s&ip=%v&chksum=%s&info={SRBX1}%s&n=200&type=1&os=Windows+10&name=Windows&double_stack=0&_=%d"
+	
+	// PortalRadUserInfo Radius User Info URL 
+	PortalRadUserInfo = "http://%v/cgi-bin/rad_user_info?%s"
 )
 
 const (
@@ -95,6 +98,12 @@ type GetPortalReq struct {
 	Platform          string `url:"name"`
 	DoubleStack       string `url:"double_stack"`
 	Timestamp         int64  `url:"_"`
+}
+
+// GetRadUserInfoReq struct for Radius User Info URL query
+type GetRadUserInfoReq struct {
+	Callback  string `url:"callback"`
+	Timestamp int64  `url:"_"`
 }
 
 // GetChallengeURL generates the URL for getchallenge req
@@ -149,6 +158,22 @@ func GetLoginURL(
 	}
 
 	return fmt.Sprintf(PortalCGI, sIP, v.Encode()), nil
+}
+
+// GetRadUserInfoReq generates the URL for rad_user_info req
+func GetRadUserInfoURL(
+	sIP,
+	callback string,
+	timestamp int64) (string, error) {
+	v, err := query.Values(&GetRadUserInfoReq{
+		Callback:  callback,
+		Timestamp: timestamp,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf(PortalRadUserInfo, sIP, v.Encode()), nil
 }
 
 // UserInfo struct for userinfo JSON required by server
