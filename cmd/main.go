@@ -7,6 +7,7 @@ import (
 	"net/netip"
 	"os"
 	"runtime"
+	"strings"
 
 	"golang.org/x/term"
 
@@ -91,6 +92,15 @@ func Main() {
 	if err != nil {
 		logrus.Errorln(err)
 		os.Exit(line())
+	}
+	// check if it is sh login type now, to stay compatible with sh login types
+	// since login type was validated, so we can use strings.HasPrefix safely
+	if !strings.HasPrefix(*t, "sh") {
+		err = ptl.CheckCaptcha()
+		if err != nil {
+			logrus.Errorln(err)
+			os.Exit(line())
+		}
 	}
 	challenge, err := ptl.GetChallenge()
 	if err != nil {

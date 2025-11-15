@@ -19,6 +19,10 @@ import (
 var (
 	// ErrIllegalLoginType is returned when an invalid login type is provided
 	ErrIllegalLoginType = errors.New("illegal login type")
+	// ErrUnexpectedCaptchaResponse is returned when captcha resp is shorter than expected
+	ErrUnexpectedCaptchaResponse = errors.New("unexpected captcha response")
+	// ErrLoginBlockedByCaptcha is returned when captcha is needed for login
+	ErrLoginBlockedByCaptcha = errors.New("current login request was blocked by captcha, you should login with browser")
 	// ErrUnexpectedChallengeResponse is returned when challenge is shorter than expected
 	ErrUnexpectedChallengeResponse = errors.New("unexpected challenge response")
 	// ErrCannotDetermineClientIP is returned when client IP cant get from challenge or local resolution with cip not specified
@@ -124,6 +128,21 @@ func ResolveLocalClientIP() (string, error) {
 	return conn.LocalAddr().(*net.UDPAddr).IP.String(), nil
 }
 
+// CaptchaRsp struct for captcha specific response
+// it uses different return format from login session
+type CaptchaRsp struct {
+	Code     int    `json:"code"`
+	Data     string `json:"data"`
+}
+
+// ResolveCaptchaRspResult resolves error message for response
+func (cp CaptchaRsp) ResolveCaptchaRspResult() error {
+	if cp.Code == 0 && cp.Data == "1" {
+		return ErrLoginBlockedByCaptcha
+	}
+	return nil
+}
+
 // rsp struct for converting from raw response data to JSON
 type rsp struct {
 	ClientIP  string `json:"client_ip"`
@@ -155,6 +174,40 @@ func NewPortal(name, password, sIP string, cIP string, loginType LoginType) (*Po
 		domain: domain,
 		acid:   acid,
 	}, nil
+}
+
+// CheckCaptcha checks current login session needs captcha or not
+func (p *Portal) CheckCaptcha() error {
+	u, err := GetCaptchaURL(
+		p.sip,
+		p.name,
+		p.cip,
+	)
+	if err != nil {
+		return err
+	}
+
+	logrus.Debugln("GET", u)
+	data, err := requestDataWith(u, "GET", PortalHeaderUA)
+	if err != nil {
+		return err
+	}
+	logrus.Debugln("get captcha resp:", helper.BytesToString(data))
+	if len(data) < 1 {
+		return ErrUnexpectedCaptchaResponse
+	}
+
+	var r CaptchaRsp
+	err = json.Unmarshal(data, &r)
+	if err != nil {
+		return err
+	}
+	err = r.ResolveCaptchaRspResult()
+	if err != nil {
+		return err
+	}
+	logrus.Debugln("captcha check pass")
+	return nil
 }
 
 // GetChallenge gets token for encryption from server

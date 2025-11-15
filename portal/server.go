@@ -35,6 +35,13 @@ const (
 	// PortalDomainShCMCC PortalDomain for sh-cmcc login type
 	PortalDomainShCMCC = "@cmccgx"
 
+	// PortalCaptcha Portal Captcha Check URL
+	PortalCaptcha = "http://%v/v2/srun_portal_captcha_image_info?%s"
+	// 1.server IP
+	// 2.username
+	// 3.client IP
+	// PortalCaptcha = "https://%v/v2/srun_portal_captcha_image_info?user_name=%s&ip=%v"
+
 	// PortalGetChallenge GetChallenge URL
 	PortalGetChallenge = "http://%v/cgi-bin/get_challenge?%s"
 	// 1.server IP
@@ -66,6 +73,12 @@ const (
 	// PortalLogin			= "http://%v/cgi-bin/srun_portal?callback=%s&action=login&username=%s%s&password={MD5}%s&ac_id=%s&ip=%v&chksum=%s&info={SRBX1}%s&n=200&type=1&os=Windows+10&name=Windows&double_stack=0&_=%d"
 )
 
+// GetCaptchaReq struct for Portal Captcha Check URL query
+type GetCaptchaReq struct {
+	Username string `url:"user_name"`
+	IP       string `url:"ip"`
+}
+
 // GetChallengeReq struct for GetChallenge URL query
 type GetChallengeReq struct {
 	Callback  string `url:"callback"`
@@ -80,16 +93,38 @@ type GetPortalReq struct {
 	Action            string `url:"action"`
 	Username          string `url:"username"`
 	EncryptedPassword string `url:"password"`
-	AcID              string `url:"ac_id"`
-	IP                string `url:"ip"`
-	Checksum          string `url:"chksum"`
-	EncodedUserInfo   string `url:"info"`
-	ConstantN         string `url:"n"`
-	ConstantType      string `url:"type"`
 	OS                string `url:"os"`
 	Platform          string `url:"name"`
+	NasIP             string `url:"nas_ip"`
 	DoubleStack       string `url:"double_stack"`
+	Checksum          string `url:"chksum"`
+	EncodedUserInfo   string `url:"info"`
+	AcID              string `url:"ac_id"`
+	IP                string `url:"ip"`
+	ConstantN         string `url:"n"`
+	ConstantType      string `url:"type"`
+	CaptchaVal        string `url:"captchaVal"`
+	ApID              string `url:"ap_id"`
+	ApIP              string `url:"ap_ip"`
+	MAC               string `url:"mac"`
 	Timestamp         int64  `url:"_"`
+}
+
+// GetCaptchaURL generates the URL for captcha check req
+func GetCaptchaURL(
+	sIP,
+	username,
+	cIP string) (string, error) {
+	v, err := query.Values(&GetCaptchaReq{
+		// Note: use raw username here, no suffix
+		Username:  username,
+		IP:        cIP,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf(PortalCaptcha, sIP, v.Encode()), nil
 }
 
 // GetChallengeURL generates the URL for getchallenge req
@@ -128,15 +163,20 @@ func GetLoginURL(
 		Action:            "login",
 		Username:          username + domain,
 		EncryptedPassword: "{MD5}" + md5Password,
-		AcID:              acid,
-		IP:                cIP,
-		Checksum:          chksum,
-		EncodedUserInfo:   "{SRBX1}" + info,
-		ConstantN:         "200",
-		ConstantType:      "1",
 		OS:                "Windows 10",
 		Platform:          "Windows",
+		NasIP:             "",
 		DoubleStack:       "0",
+		Checksum:          chksum,
+		EncodedUserInfo:   "{SRBX1}" + info,
+		AcID:              acid,
+		IP:                cIP,
+		ConstantN:         "200",
+		ConstantType:      "1",
+		CaptchaVal:        "",
+		ApID:              "",
+		ApIP:              "",
+		MAC:               "",
 		Timestamp:         timestamp,
 	})
 	if err != nil {
