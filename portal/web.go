@@ -58,7 +58,7 @@ func dialerWithInterface(iface string) *net.Dialer {
 			// set SO_BINDTODEVICE for Control to bind to specified interface,
 			// after socket is initialized
 			err := c.Control(func(fd uintptr) {
-				controlErr = syscall.SetsockoptString(int(fd), syscall.SOL_SOCKET, syscall.SO_BINDTODEVICE, iface)
+				controlErr = syscall.BindToDevice(int(fd), iface)
 			})
 			if err != nil {
 				return err
